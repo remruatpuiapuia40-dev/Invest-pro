@@ -7,92 +7,100 @@
 <title>Invest Pro</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#081323;color:white}
-header{padding:22px;background:#10243a;display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:24px;font-weight:bold;color:#35dfa0}
-button{background:#20c98b;border:0;padding:12px 18px;border-radius:8px;font-weight:bold;color:#06251b}
-main{padding:18px;max-width:950px;margin:auto}
-.hero{background:linear-gradient(130deg,#123b50,#14654d);padding:25px;border-radius:16px;margin:15px 0}
-h1{font-size:30px}
-.card{background:#12263d;border:1px solid #25415c;padding:18px;border-radius:13px;margin:12px 0}
+body{margin:0;background:#071426;color:white;font-family:Arial,sans-serif}
+header{background:#10243d;padding:20px;text-align:center}
+header h1{color:#39e6a0;margin:0}
+main{max-width:850px;margin:auto;padding:18px}
+.card{background:#132943;padding:20px;border-radius:14px;margin:15px 0}
+input{width:100%;padding:13px;margin:8px 0;border:0;border-radius:8px}
+button{padding:12px 18px;background:#28d99a;border:0;border-radius:8px;font-weight:bold;cursor:pointer;margin:5px}
+.secondary{background:#304d6b;color:white}
+.hidden{display:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-.price{color:#35dfa0;font-size:22px;font-weight:bold}
-input{width:100%;padding:13px;margin:7px 0;border-radius:8px;border:1px solid #34506b;background:#09192b;color:white}
-footer{text-align:center;color:#91a8bd;padding:25px}
+.item{background:#1b3856;padding:15px;border-radius:10px}
+.price{color:#39e6a0;font-weight:bold}
+.small{color:#b8c9dc;font-size:13px}
 </style>
 </head>
 <body>
 <header>
-<div class="logo">INVEST PRO</div>
-<button onclick="showLogin()">Login / Register</button>
+<h1>INVEST PRO</h1>
+<p>Membership & Product Demo Platform</p>
 </header>
 <main>
-<section class="hero">
-<h1>Welcome to Invest Pro</h1>
-<p>Your membership and product demo platform.</p>
-<button onclick="document.getElementById('vip').scrollIntoView()">Explore VIP Plans</button>
-</section>
-
-<div class="card">
-<h2>My Dashboard</h2>
-<p>Demo Balance</p>
-<div class="price">$0.00</div>
-<p>Demo account only — no cash value.</p>
-</div>
-
-<section id="vip">
-<h2>VIP Membership Plans</h2>
-<div class="grid" id="vipPlans"></div>
-</section>
-
-<section>
-<h2>Product Shop</h2>
-<div class="grid">
-<div class="card">👕<h3>T-Shirt</h3><p>₹399</p><button onclick="order('T-Shirt')">Buy Now</button></div>
-<div class="card">👟<h3>Sneakers</h3><p>₹1,299</p><button onclick="order('Sneakers')">Buy Now</button></div>
-<div class="card">📱<h3>Phone Stand</h3><p>₹249</p><button onclick="order('Phone Stand')">Buy Now</button></div>
-<div class="card">🎒<h3>Backpack</h3><p>₹799</p><button onclick="order('Backpack')">Buy Now</button></div>
-</div>
-</section>
-
-<section class="card" id="login">
-<h2>Register / Login Demo</h2>
-<input id="username" placeholder="Enter username">
-<input id="email" type="email" placeholder="Enter email">
-<button onclick="register()">Register Demo</button>
+<section class="card" id="auth">
+<h2>Create Account / Login</h2>
+<p class="small">Demo account only. Do not enter a real password.</p>
+<input id="username" placeholder="Username">
+<input id="email" type="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="register()">Register</button>
+<button class="secondary" onclick="login()">Login</button>
 <p id="message"></p>
 </section>
 
-<section class="card">
+<section id="dashboard" class="hidden">
+<div class="card">
+<h2>Welcome, <span id="welcome"></span>!</h2>
+<p>Demo Balance: <strong>₹0.00</strong></p>
+<button class="secondary" onclick="logout()">Logout</button>
+</div>
+
+<div class="card">
+<h2>VIP Membership Plans</h2>
+<div class="grid" id="vips"></div>
+</div>
+
+<div class="card">
+<h2>Product Shop</h2>
+<div class="grid" id="products"></div>
+</div>
+
+<div class="card">
 <h2>My Orders</h2>
 <div id="orders">No demo orders yet.</div>
+</div>
 </section>
+<p class="small">Invest Pro is a demonstration platform. No real-money investments, payments, guaranteed returns or withdrawals are offered.</p>
 </main>
-<footer>Invest Pro © 2026 | Demo Platform</footer>
-
 <script>
-const plans=[
-["VIP 1",290],["VIP 2",3900],["VIP 3",4500],
-["VIP 4",7000],["VIP 5",8000],["VIP 6",7800],
-["VIP 7",9000],["VIP 8",10000]
+const vipPrices=[290,3900,4500,7000,8000,7800,9000,10000];
+const products=[
+["T-shirt",399],["Sneakers",1299],
+["Phone Stand",249],["Backpack",799]
 ];
-document.getElementById("vipPlans").innerHTML=plans.map(p=>
-`<div class="card"><h3>${p[0]}</h3><div class="price">₹${p[1].toLocaleString("en-IN")}</div><p>Demo membership</p><button onclick="alert('Demo only. No payment taken.')">View Plan</button></div>`
-).join("");
+let currentUser=null;
+let orders=[];
 
-function showLogin(){
-document.getElementById("login").scrollIntoView({behavior:"smooth"});
-}
 function register(){
-let name=document.getElementById("username").value.trim();
-let email=document.getElementById("email").value.trim();
-if(!name||!email){alert("Enter username and email");return;}
-document.getElementById("message").innerText="Demo registration complete for "+name+". No real account created.";
+let u=username.value.trim(),e=email.value.trim(),p=password.value;
+if(!u||!e||!p){message.textContent="Please fill in all fields.";return;}
+if(p.length<6){message.textContent="Password must have at least 6 characters.";return;}
+message.textContent="Demo registration successful. You can now log in.";
 }
-function order(item){
-let box=document.getElementById("orders");
-if(box.innerText==="No demo orders yet.")box.innerHTML="";
-box.innerHTML+="<p>Demo order: "+item+"</p>";
+function login(){
+let u=username.value.trim(),e=email.value.trim(),p=password.value;
+if(!u||!e||!p){message.textContent="Please fill in all fields.";return;}
+currentUser=u;
+welcome.textContent=u;
+auth.classList.add("hidden");
+dashboard.classList.remove("hidden");
+}
+function logout(){
+currentUser=null;
+dashboard.classList.add("hidden");
+auth.classList.remove("hidden");
+}
+vipPrices.forEach((price,i)=>{
+vips.innerHTML+=`<div class="item"><h3>VIP ${i+1}</h3><p class="price">₹${price.toLocaleString("en-IN")}</p><button onclick="order('VIP ${i+1}')">Select</button></div>`;
+});
+products.forEach(product=>{
+productsEl= document.getElementById("products");
+productsEl.innerHTML+=`<div class="item"><h3>${product[0]}</h3><p class="price">₹${product[1].toLocaleString("en-IN")}</p><button onclick="order('${product[0]}')">Buy Now</button></div>`;
+});
+function order(name){
+orders.push(name);
+document.getElementById("orders").innerHTML=orders.map(x=>"<p>• "+x+" (Demo order)</p>").join("");
 }
 </script>
 </body>
