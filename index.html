@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invest Pro</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#081323;color:white}
+header{padding:22px;background:#10243a;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:24px;font-weight:bold;color:#35dfa0}
+button{background:#20c98b;border:0;padding:12px 18px;border-radius:8px;font-weight:bold;color:#06251b}
+main{padding:18px;max-width:950px;margin:auto}
+.hero{background:linear-gradient(130deg,#123b50,#14654d);padding:25px;border-radius:16px;margin:15px 0}
+h1{font-size:30px}
+.card{background:#12263d;border:1px solid #25415c;padding:18px;border-radius:13px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.price{color:#35dfa0;font-size:22px;font-weight:bold}
+input{width:100%;padding:13px;margin:7px 0;border-radius:8px;border:1px solid #34506b;background:#09192b;color:white}
+footer{text-align:center;color:#91a8bd;padding:25px}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">INVEST PRO</div>
+<button onclick="showLogin()">Login / Register</button>
+</header>
+<main>
+<section class="hero">
+<h1>Welcome to Invest Pro</h1>
+<p>Your membership and product demo platform.</p>
+<button onclick="document.getElementById('vip').scrollIntoView()">Explore VIP Plans</button>
+</section>
+
+<div class="card">
+<h2>My Dashboard</h2>
+<p>Demo Balance</p>
+<div class="price">$0.00</div>
+<p>Demo account only — no cash value.</p>
+</div>
+
+<section id="vip">
+<h2>VIP Membership Plans</h2>
+<div class="grid" id="vipPlans"></div>
+</section>
+
+<section>
+<h2>Product Shop</h2>
+<div class="grid">
+<div class="card">👕<h3>T-Shirt</h3><p>₹399</p><button onclick="order('T-Shirt')">Buy Now</button></div>
+<div class="card">👟<h3>Sneakers</h3><p>₹1,299</p><button onclick="order('Sneakers')">Buy Now</button></div>
+<div class="card">📱<h3>Phone Stand</h3><p>₹249</p><button onclick="order('Phone Stand')">Buy Now</button></div>
+<div class="card">🎒<h3>Backpack</h3><p>₹799</p><button onclick="order('Backpack')">Buy Now</button></div>
+</div>
+</section>
+
+<section class="card" id="login">
+<h2>Register / Login Demo</h2>
+<input id="username" placeholder="Enter username">
+<input id="email" type="email" placeholder="Enter email">
+<button onclick="register()">Register Demo</button>
+<p id="message"></p>
+</section>
+
+<section class="card">
+<h2>My Orders</h2>
+<div id="orders">No demo orders yet.</div>
+</section>
+</main>
+<footer>Invest Pro © 2026 | Demo Platform</footer>
+
+<script>
+const plans=[
+["VIP 1",290],["VIP 2",3900],["VIP 3",4500],
+["VIP 4",7000],["VIP 5",8000],["VIP 6",7800],
+["VIP 7",9000],["VIP 8",10000]
+];
+document.getElementById("vipPlans").innerHTML=plans.map(p=>
+`<div class="card"><h3>${p[0]}</h3><div class="price">₹${p[1].toLocaleString("en-IN")}</div><p>Demo membership</p><button onclick="alert('Demo only. No payment taken.')">View Plan</button></div>`
+).join("");
+
+function showLogin(){
+document.getElementById("login").scrollIntoView({behavior:"smooth"});
+}
+function register(){
+let name=document.getElementById("username").value.trim();
+let email=document.getElementById("email").value.trim();
+if(!name||!email){alert("Enter username and email");return;}
+document.getElementById("message").innerText="Demo registration complete for "+name+". No real account created.";
+}
+function order(item){
+let box=document.getElementById("orders");
+if(box.innerText==="No demo orders yet.")box.innerHTML="";
+box.innerHTML+="<p>Demo order: "+item+"</p>";
+}
+</script>
+</body>
+</html>
