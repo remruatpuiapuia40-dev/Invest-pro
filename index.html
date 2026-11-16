@@ -102,95 +102,206 @@ button{padding:12px 18px;background:#28d99a;border:0;border-radius:8px;font-weig
 </section>
 <p class="small">Invest Pro is a demonstration platform. No real-money investments, payments, guaranteed returns or withdrawals are offered.</p>
 </main>
-<script>
-const vipPrices=[290,3900,4500,7000,8000,7800,9000,10000];
-const products=[
-["T-shirt",399],["Sneakers",1299],
-["Phone Stand",249],["Backpack",799]
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBpy_L3_jxchH4ojCX-P6mmHzMB0FWd6Is",
+  authDomain: "invest-pro-1a7df.firebaseapp.com",
+  projectId: "invest-pro-1a7df",
+  storageBucket: "invest-pro-1a7df.firebasestorage.app",
+  messagingSenderId: "130973747572",
+  appId: "1:130973747572:web:16a79ca618748aa19f4421"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const vipPrices = [290,3900,4500,7000,8000,7800,9000,10000];
+const products = [
+  ["T-shirt",399],["Sneakers",1299],
+  ["Phone Stand",249],["Backpack",799]
 ];
-let currentUser=null;
-let orders=[];
 
-let withdrawals=[];
+let currentUser = null;
+let orders = [];
+let withdrawals = [];
 
-function requestWithdraw(){
-  const amount=Number(document.getElementById("withdrawAmount").value);
-  const method=document.getElementById("withdrawMethod").value;
-  const details=document.getElementById("withdrawDetails").value.trim();
-  const msg=document.getElementById("withdrawMessage");
+const el = id => document.getElementById(id);
 
-  if(!amount || amount<=0 || !method || !details){
-    msg.textContent="Please complete all fields.";
+function showMessage(message) {
+  el("message").textContent = message;
+}
+
+async function register() {
+  const u = el("username").value.trim();
+  const e = el("email").value.trim();
+  const p = el("password").value;
+
+  if (!u || !e || !p) {
+    showMessage("Please fill in all fields.");
+    return;
+  }
+
+  try {
+    await createUserWithEmailAndPassword(auth,e,p);
+    showMessage("Account created. You can now log in.");
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function login() {
+  const e = el("email").value.trim();
+  const p = el("password").value;
+
+  if (!e || !p) {
+    showMessage("Enter your email and password.");
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth,e,p);
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function logout() {
+  await signOut(auth);
+}
+
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
+
+  if (!user) {
+    el("auth").classList.remove("hidden");
+    el("dashboard").classList.add("hidden");
+    el("adminAccessCard").classList.add("hidden");
+    el("adminPanel").classList.add("hidden");
+    return;
+  }
+
+  el("auth").classList.add("hidden");
+  el("dashboard").classList.remove("hidden");
+  el("welcome").textContent = user.email || "User";
+
+  try {
+    const adminRef = doc(db,"admins",user.uid);
+    const adminSnap = await getDoc(adminRef);
+
+    if (adminSnap.exists() && adminSnap.data().role === "admin") {
+      el("adminAccessCard").classList.remove("hidden");
+    } else {
+      el("adminAccessCard").classList.add("hidden");
+      el("adminPanel").classList.add("hidden");
+    }
+  } catch (error) {
+    el("adminAccessCard").classList.add("hidden");
+    showMessage("Could not verify admin access.");
+  }
+});
+
+function requestWithdraw() {
+  const amount = Number(el("withdrawAmount").value);
+  const method = el("withdrawMethod").value;
+  const details = el("withdrawDetails").value.trim();
+
+  if (!amount || amount <= 0 || !method || !details) {
+    el("withdrawMessage").textContent = "Please complete all fields.";
     return;
   }
 
   withdrawals.push({amount,method,status:"Demo request"});
-  document.getElementById("withdrawHistory").innerHTML=
-    withdrawals.map(w=>`<p>₹${w.amount} - ${w.method} - ${w.status}</p>`).join("");
+  el("withdrawHistory").innerHTML = withdrawals.map(w =>
+    `<p>₹${w.amount} - ${w.method} - ${w.status}</p>`
+  ).join("");
 
-  msg.textContent="Demo withdrawal request recorded.";
+  el("withdrawMessage").textContent = "Demo request recorded.";
 }
 
-function openAdmin(){
-  document.getElementById("adminPanel").classList.remove("hidden");
+function openAdmin() {
+  if (!currentUser) return;
 
-  document.getElementById("adminUsers").innerHTML =
-    currentUser ? "<p>"+currentUser+"</p>" : "No users yet.";
+  getDoc(doc(db,"admins",currentUser.uid)).then(snap => {
+    if (!snap.exists() || snap.data().role !== "admin") {
+      el("adminPanel").classList.add("hidden");
+      return;
+    }
 
-  document.getElementById("adminOrders").innerHTML =
-    orders.length
-    ? orders.map(x=>"<p>"+x+"</p>").join("")
-    : "No orders yet.";
+    el("adminPanel").classList.remove("hidden");
+    el("adminUsers").textContent = currentUser.email || "";
+    el("adminOrders").innerHTML = orders.map(x =>
+      `<p>${x}</p>`
+    ).join("") || "No demo orders yet.";
 
-  document.getElementById("adminWithdrawals").innerHTML =
-    withdrawals.length
-    ? withdrawals.map((w,i)=>`
+    el("adminWithdrawals").innerHTML = withdrawals.map((w,i) => `
       <p>₹${w.amount} - ${w.method} - ${w.status}</p>
       <button onclick="updateWithdrawal(${i},'Approved')">Approve</button>
       <button class="secondary" onclick="updateWithdrawal(${i},'Rejected')">Reject</button>
-    `).join("")
-    : "No withdrawal requests";
+    `).join("") || "No requests yet.";
+  }).catch(() => {
+    el("adminPanel").classList.add("hidden");
+  });
 }
 
-function updateWithdrawal(i,status){
-  withdrawals[i].status=status;
+function updateWithdrawal(i,status) {
+  withdrawals[i].status = status;
   openAdmin();
 }
 
-function closeAdmin(){
-  document.getElementById("adminPanel").classList.add("hidden");
+function closeAdmin() {
+  el("adminPanel").classList.add("hidden");
 }
-  
-function register(){
-let u=username.value.trim(),e=email.value.trim(),p=password.value;
-if(!u||!e||!p){message.textContent="Please fill in all fields.";return;}
-if(p.length<6){message.textContent="Password must have at least 6 characters.";return;}
-message.textContent="Demo registration successful. You can now log in.";
+
+function order(name) {
+  orders.push(name);
+  el("orders").innerHTML = orders.map(x =>
+    `<p>${x} (Demo order)</p>`
+  ).join("");
 }
-function login(){
-let u=username.value.trim(),e=email.value.trim(),p=password.value;
-if(!u||!e||!p){message.textContent="Please fill in all fields.";return;}
-currentUser=u;
-welcome.textContent=u;
-auth.classList.add("hidden");
-dashboard.classList.remove("hidden");
-}
-function logout(){
-currentUser=null;
-dashboard.classList.add("hidden");
-auth.classList.remove("hidden");
-}
-vipPrices.forEach((price,i)=>{
-vips.innerHTML+=`<div class="item"><h3>VIP ${i+1}</h3><p class="price">₹${price.toLocaleString("en-IN")}</p><button onclick="order('VIP ${i+1}')">Select</button></div>`;
+
+vipPrices.forEach((price,i) => {
+  el("vips").innerHTML += `
+    <div class="item">
+      <h3>VIP ${i+1}</h3>
+      <p class="price">₹${price.toLocaleString("en-IN")}</p>
+      <button onclick="order('VIP ${i+1}')">Select</button>
+    </div>`;
 });
-products.forEach(product=>{
-productsEl= document.getElementById("products");
-productsEl.innerHTML+=`<div class="item"><h3>${product[0]}</h3><p class="price">₹${product[1].toLocaleString("en-IN")}</p><button onclick="order('${product[0]}')">Buy Now</button></div>`;
+
+products.forEach(product => {
+  el("products").innerHTML += `
+    <div class="item">
+      <h3>${product[0]}</h3>
+      <p class="price">₹${product[1].toLocaleString("en-IN")}</p>
+      <button onclick="order('${product[0]}')">Buy Now</button>
+    </div>`;
 });
-function order(name){
-orders.push(name);
-document.getElementById("orders").innerHTML=orders.map(x=>"<p>• "+x+" (Demo order)</p>").join("");
-}
+
+window.register = register;
+window.login = login;
+window.logout = logout;
+window.requestWithdraw = requestWithdraw;
+window.openAdmin = openAdmin;
+window.updateWithdrawal = updateWithdrawal;
+window.closeAdmin = closeAdmin;
+window.order = order;
 </script>
+  
 </body>
 </html>
