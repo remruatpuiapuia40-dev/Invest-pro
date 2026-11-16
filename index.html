@@ -60,6 +60,23 @@ button{padding:12px 18px;background:#28d99a;border:0;border-radius:8px;font-weig
 <h2>My Orders</h2>
 <div id="orders">No demo orders yet.</div>
 </div>
+
+<div class="card">
+  <h2>Withdraw (Demo)</h2>
+  <p class="small">Demo only. No real payments or withdrawals.</p>
+  <input id="withdrawAmount" type="number" min="1" placeholder="Enter amount (₹)">
+  <select id="withdrawMethod" style="width:100%;padding:13px;border-radius:8px;margin:8px 0">
+    <option value="">Select payment method</option>
+    <option value="UPI">UPI</option>
+    <option value="Bank Transfer">Bank Transfer</option>
+  </select>
+  <input id="withdrawDetails" placeholder="Demo UPI ID or Bank details">
+  <button onclick="requestWithdraw()">Submit Request</button>
+  <p id="withdrawMessage"></p>
+  <h3>Withdrawal History</h3>
+  <div id="withdrawHistory">No demo requests yet.</div>
+</div>
+  
 </section>
 <p class="small">Invest Pro is a demonstration platform. No real-money investments, payments, guaranteed returns or withdrawals are offered.</p>
 </main>
@@ -72,6 +89,26 @@ const products=[
 let currentUser=null;
 let orders=[];
 
+let withdrawals=[];
+
+function requestWithdraw(){
+  const amount=Number(document.getElementById("withdrawAmount").value);
+  const method=document.getElementById("withdrawMethod").value;
+  const details=document.getElementById("withdrawDetails").value.trim();
+  const msg=document.getElementById("withdrawMessage");
+
+  if(!amount || amount<=0 || !method || !details){
+    msg.textContent="Please complete all fields.";
+    return;
+  }
+
+  withdrawals.push({amount,method,status:"Demo request"});
+  document.getElementById("withdrawHistory").innerHTML=
+    withdrawals.map(w=>`<p>₹${w.amount} - ${w.method} - ${w.status}</p>`).join("");
+
+  msg.textContent="Demo withdrawal request recorded.";
+}
+  
 function register(){
 let u=username.value.trim(),e=email.value.trim(),p=password.value;
 if(!u||!e||!p){message.textContent="Please fill in all fields.";return;}
