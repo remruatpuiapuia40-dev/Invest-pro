@@ -76,6 +76,27 @@ button{padding:12px 18px;background:#28d99a;border:0;border-radius:8px;font-weig
   <h3>Withdrawal History</h3>
   <div id="withdrawHistory">No demo requests yet.</div>
 </div>
+
+<div class="card">
+  <h2>Admin Dashboard</h2>
+  <p class="small">Manage demo users, orders and withdrawals.</p>
+  <button onclick="openAdmin()">Open Admin Panel</button>
+</div>
+
+<div class="card hidden" id="adminPanel">
+  <h2>Admin Control Panel</h2>
+
+  <h3>Registered Users</h3>
+  <div id="adminUsers">No users yet.</div>
+
+  <h3>VIP & Product Orders</h3>
+  <div id="adminOrders">No orders yet.</div>
+
+  <h3>Withdrawal Requests</h3>
+  <div id="adminWithdrawals">No requests yet.</div>
+
+  <button class="secondary" onclick="closeAdmin()">Close Admin</button>
+</div>
   
 </section>
 <p class="small">Invest Pro is a demonstration platform. No real-money investments, payments, guaranteed returns or withdrawals are offered.</p>
@@ -107,6 +128,36 @@ function requestWithdraw(){
     withdrawals.map(w=>`<p>₹${w.amount} - ${w.method} - ${w.status}</p>`).join("");
 
   msg.textContent="Demo withdrawal request recorded.";
+}
+
+function openAdmin(){
+  document.getElementById("adminPanel").classList.remove("hidden");
+
+  document.getElementById("adminUsers").innerHTML =
+    currentUser ? "<p>"+currentUser+"</p>" : "No users yet.";
+
+  document.getElementById("adminOrders").innerHTML =
+    orders.length
+    ? orders.map(x=>"<p>"+x+"</p>").join("")
+    : "No orders yet.";
+
+  document.getElementById("adminWithdrawals").innerHTML =
+    withdrawals.length
+    ? withdrawals.map((w,i)=>`
+      <p>₹${w.amount} - ${w.method} - ${w.status}</p>
+      <button onclick="updateWithdrawal(${i},'Approved')">Approve</button>
+      <button class="secondary" onclick="updateWithdrawal(${i},'Rejected')">Reject</button>
+    `).join("")
+    : "No withdrawal requests";
+}
+
+function updateWithdrawal(i,status){
+  withdrawals[i].status=status;
+  openAdmin();
+}
+
+function closeAdmin(){
+  document.getElementById("adminPanel").classList.add("hidden");
 }
   
 function register(){
